@@ -220,7 +220,10 @@ class LocalSQLiteDB:
 
 class SupabaseDB:
     def __init__(self, supabase_url: str, service_key: str):
-        self.base_url = supabase_url.rstrip("/") + "/rest/v1"
+        clean_url = supabase_url.strip().rstrip("/")
+        if clean_url.endswith("/rest/v1"):
+            clean_url = clean_url[:-len("/rest/v1")]
+        self.base_url = clean_url + "/rest/v1"
         self.headers = {
             "apikey": service_key,
             "Authorization": f"Bearer {service_key}",
