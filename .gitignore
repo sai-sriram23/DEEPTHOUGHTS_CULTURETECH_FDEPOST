@@ -38,6 +38,7 @@ transcripts/
 call_coding.csv
 index.csv
 index.json
+full_analysis_report.json
 *.zip
 
 # Operating System & IDE
