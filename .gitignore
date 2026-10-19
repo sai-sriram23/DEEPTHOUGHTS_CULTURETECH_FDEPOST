@@ -1,0 +1,47 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+frontend/dist/
+frontend/node_modules/
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+backend/*.db
+backend/*.sqlite3
+
+# Task transcripts and private data (per assignment rules)
+transcripts/
+call_coding.csv
+index.csv
+index.json
+*.zip
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

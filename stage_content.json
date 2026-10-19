@@ -1,0 +1,146 @@
+[
+  {
+    "stage_number": 1,
+    "name": "Opening",
+    "purpose": "Reach the right person and say who you are.",
+    "likely_statements": [
+      "\"Who is this? Which department are you looking for?\"",
+      "\"I am driving / in a meeting, who is calling?\"",
+      "\"He left the company a long time ago.\""
+    ],
+    "quick_outcomes": [
+      "Right person",
+      "Switchboard or assistant",
+      "Wrong person or left",
+      "Busy, call later"
+    ],
+    "watch_out": "Confirm the name before anything else. About 1 in 6 calls ends here.",
+    "next_stage_number": 2
+  },
+  {
+    "stage_number": 2,
+    "name": "Purpose",
+    "purpose": "Say why you called in one or two sentences they can repeat to a colleague.",
+    "likely_statements": [
+      "\"What is this regarding? Which company are you from?\"",
+      "\"Where did you get my number?\"",
+      "\"Is this a sales call?\""
+    ],
+    "quick_outcomes": [
+      "Asked what we do",
+      "Asked where we got the number",
+      "Said it is a sales call",
+      "Let me go on"
+    ],
+    "watch_out": "If they ask twice, the first answer was a label. Say it in plain words.",
+    "next_stage_number": 3
+  },
+  {
+    "stage_number": 3,
+    "name": "Permission",
+    "purpose": "Find out whether they will talk now. A clear yes, a clear no or a time to call back are all good.",
+    "likely_statements": [
+      "\"Yes, go ahead.\" (then silence)",
+      "\"Call me after two, or tomorrow.\"",
+      "\"Send it on WhatsApp first.\""
+    ],
+    "quick_outcomes": [
+      "Clear yes",
+      "Call back at a time",
+      "Send WhatsApp first",
+      "No"
+    ],
+    "watch_out": "A short yes followed by silence is not permission. Wait for the actual answer.",
+    "next_stage_number": 4
+  },
+  {
+    "stage_number": 4,
+    "name": "Their business",
+    "purpose": "Ask about their company and work before saying more about yours.",
+    "likely_statements": [
+      "One line about what they do, then wait for the pitch.",
+      "\"We do not make that. That is a different division.\"",
+      "\"First tell me about your company.\""
+    ],
+    "quick_outcomes": [
+      "Described their business",
+      "Corrected us",
+      "Asked about us first",
+      "One line, waiting"
+    ],
+    "watch_out": "Callers often skip this stage. Ask one question about their work, then listen.",
+    "next_stage_number": 5
+  },
+  {
+    "stage_number": 5,
+    "name": "Their need, in their words",
+    "purpose": "Hear what they are trying to do or struggling with. Write down exactly what was said.",
+    "likely_statements": [
+      "A goal: a new market, a product line, better margins.",
+      "\"Everything is fine, we do not need anything.\"",
+      "\"What can you do for a company like ours?\""
+    ],
+    "quick_outcomes": [
+      "Named a goal",
+      "Said all fine",
+      "Asked what we can do",
+      "Could not answer"
+    ],
+    "watch_out": "Their words, not yours. The AI never overwrites this box.",
+    "next_stage_number": 6
+  },
+  {
+    "stage_number": 6,
+    "name": "Objection",
+    "purpose": "Hear the reason for a no and understand it before answering.",
+    "likely_statements": [
+      "\"Send it in writing and we will see.\"",
+      "\"Not me. Talk to our CFO or head office.\"",
+      "\"We already have an internal team or consultant.\""
+    ],
+    "quick_outcomes": [
+      "Send it in writing",
+      "Not the right person",
+      "Already have a team",
+      "Not interested"
+    ],
+    "watch_out": "Most objections are deflections (send it in writing, not me), not hard refusals. Deflections often still lead to a next step.",
+    "next_stage_number": 7
+  },
+  {
+    "stage_number": 7,
+    "name": "Next step",
+    "purpose": "Agree one thing, named, with a channel or a time.",
+    "likely_statements": [
+      "\"Yes, send the document.\"",
+      "\"Call me on Tuesday after two.\"",
+      "\"Talk to my colleague, here is the number.\""
+    ],
+    "quick_outcomes": [
+      "Meeting or call set",
+      "Document on WhatsApp",
+      "Document on email",
+      "Referral given"
+    ],
+    "watch_out": "A time they name is worth more than a time you propose. A yes to a document may be politeness.",
+    "next_stage_number": 8
+  },
+  {
+    "stage_number": 8,
+    "name": "Close",
+    "purpose": "End clearly and record what happened.",
+    "likely_statements": [
+      "The line drops mid-sentence.",
+      "A warm goodbye after a no, which is still a no.",
+      "\"Okay, thank you.\" (after agreeing something)"
+    ],
+    "quick_outcomes": [
+      "Next step agreed",
+      "Report agreed",
+      "Declined",
+      "Line dropped"
+    ],
+    "watch_out": "Record the outcome the words support, not the friendliest goodbye.",
+    "next_stage_number": null
+  }
+]
