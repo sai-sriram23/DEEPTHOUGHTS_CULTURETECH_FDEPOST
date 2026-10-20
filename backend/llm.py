@@ -99,7 +99,7 @@ async def generate_call_summary(
         f"Logged Outcome: {outcome or 'not_logged'}\n"
         f"Next Step: {next_step_json}\n\n"
         f"Recorded Stage Data:\n{context_str}\n\n"
-        "Provide the 1-sentence summary (under 25 words):"
+        "Write a complete, informative 1-sentence summary of this call (10 to 25 words):"
     )
 
     try:
@@ -110,10 +110,10 @@ async def generate_call_summary(
                 "contents": [{"parts": [{"text": user_prompt}]}],
                 "generationConfig": {
                     "temperature": 0.2,
-                    "maxOutputTokens": 60,
+                    "maxOutputTokens": 100,
                 }
             }
-            async with httpx.AsyncClient(timeout=8.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 res = await client.post(url, json=payload)
                 if res.status_code != 200 and model != "gemini-3.5-flash":
                     logger.warning(f"Gemini ({model}) failed ({res.status_code}). Retrying with active model gemini-3.5-flash...")
