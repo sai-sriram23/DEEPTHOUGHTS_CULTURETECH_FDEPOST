@@ -4,7 +4,7 @@
 
 [![Repository](https://img.shields.io/badge/GitHub-sai--sriram23%2FDEEPTHOUGHTS__CULTURETECH__FDEPOST-blue?logo=github)](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel%20React%20Vite-black?logo=vercel)](https://deepthoughts-culturetech-fdepost.vercel.app)
-[![Backend](https://img.shields.io/badge/Backend-Render%20FastAPI-46E3B7?logo=render)](https://cold-call-companion-backend.onrender.com/health)
+[![Backend](https://img.shields.io/badge/Backend-Render%20FastAPI-46E3B7?logo=render)](https://deepthoughts-culturetech-fdepost.onrender.com/health)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com)
 [![Tests](https://img.shields.io/badge/Tests-6%2F6%20Passed%20(1.42s)-brightgreen)](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
 
@@ -14,7 +14,7 @@
 
 - **Public GitHub Repository:** [https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
 - **Live Vercel Application:** [https://deepthoughts-culturetech-fdepost.vercel.app](https://deepthoughts-culturetech-fdepost.vercel.app) *(or locally at `http://localhost:5173`)*
-- **Render Backend Liveness:** [https://cold-call-companion-backend.onrender.com/health](https://cold-call-companion-backend.onrender.com/health) *(or locally at `http://localhost:8000/health`)*
+- **Render Backend Liveness:** [https://deepthoughts-culturetech-fdepost.onrender.com/health](https://deepthoughts-culturetech-fdepost.onrender.com/health) *(or locally at `http://localhost:8000/health`)*
 - **Google Drive Demo Video:** `<drive-link-anyone-with-link-can-view>` *(min 6 minutes, face on camera)*
 - **LLM Provider & Model:** **Google Gemini (gemini-2.5-flash via Google AI Studio)**
 - **LLM Features & Provenance:**
@@ -241,7 +241,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 - **Build Command:** `npm run build`
 - **Output Directory:** `dist`
 - **Environment Variables:**
-  - `VITE_API_BASE_URL`: `https://cold-call-companion-backend.onrender.com`
+  - `VITE_API_BASE_URL`: `https://deepthoughts-culturetech-fdepost.onrender.com`
 
 ---
 
