@@ -73,8 +73,13 @@ export default function CallDetailModal({ call, onClose }) {
           {call.summary && (
             <div className="detail-summary-card">
               <div className="summary-card-header">
-                <Sparkles size={16} className="text-indigo-400" />
-                <span className="summary-title">One-Line Call Summary (LLM)</span>
+                <div className="summary-header-left">
+                  <Sparkles size={16} className="text-indigo-400" />
+                  <span className="summary-title">One-Line Call Summary</span>
+                </div>
+                <span className={`summary-source-pill ${call.summary_source === 'llm' ? 'source-llm' : 'source-fallback'}`}>
+                  {call.summary_source === 'llm' ? '✨ Gemini AI' : 'Rule-based fallback'}
+                </span>
               </div>
               <p className="summary-text">{call.summary}</p>
             </div>

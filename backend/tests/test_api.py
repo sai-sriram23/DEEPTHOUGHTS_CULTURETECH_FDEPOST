@@ -100,6 +100,7 @@ def test_call_lifecycle_and_upsert():
     assert closed_call["ended_stage"] == 7
     assert closed_call["outcome"] == "next_step_agreed"
     assert closed_call["summary"] is not None
+    assert closed_call["summary_source"] in ["llm", "fallback"]
     assert closed_call["ended_at"] is not None
 
     # Verify Stage 5 verbatim words were completely untouched

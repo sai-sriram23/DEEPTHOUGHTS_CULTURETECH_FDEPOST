@@ -55,6 +55,7 @@ class LocalSQLiteDB:
                 outcome TEXT,
                 next_step TEXT,
                 summary TEXT,
+                summary_source TEXT,
                 outcome_flag TEXT,
                 created_at TEXT NOT NULL
             );
@@ -198,12 +199,19 @@ class LocalSQLiteDB:
         outcome: str,
         next_step: Optional[Dict[str, Any]],
         summary: Optional[str],
-        outcome_flag: Optional[str]
+        outcome_flag: Optional[str],
+        summary_source: Optional[str] = "fallback"
     ) -> Optional[Dict[str, Any]]:
         now = get_current_iso_time()
         next_step_json = json.dumps(next_step) if next_step else None
         with self._get_conn() as conn:
             cursor = conn.cursor()
+            # Ensure column exists if table was created earlier
+            try:
+                cursor.execute("ALTER TABLE calls ADD COLUMN summary_source TEXT")
+            except Exception:
+                pass
+
             cursor.execute("""
             UPDATE calls
             SET ended_at = coalesce(ended_at, ?),
@@ -211,9 +219,10 @@ class LocalSQLiteDB:
                 outcome = ?,
                 next_step = ?,
                 summary = ?,
+                summary_source = ?,
                 outcome_flag = ?
             WHERE id = ?
-            """, (now, ended_stage, outcome, next_step_json, summary, outcome_flag, call_id))
+            """, (now, ended_stage, outcome, next_step_json, summary, summary_source, outcome_flag, call_id))
             conn.commit()
         return self.get_call(call_id)
 
@@ -298,7 +307,8 @@ class SupabaseDB:
         outcome: str,
         next_step: Optional[Dict[str, Any]],
         summary: Optional[str],
-        outcome_flag: Optional[str]
+        outcome_flag: Optional[str],
+        summary_source: Optional[str] = "fallback"
     ) -> Optional[Dict[str, Any]]:
         now = get_current_iso_time()
         payload = {
@@ -306,11 +316,16 @@ class SupabaseDB:
             "outcome": outcome,
             "next_step": next_step,
             "summary": summary,
+            "summary_source": summary_source,
             "outcome_flag": outcome_flag,
             "ended_at": now
         }
         with httpx.Client(timeout=8.0) as client:
             res = client.patch(f"{self.base_url}/calls?id=eq.{call_id}", json=payload, headers=self.headers)
+            if res.status_code == 400 and "summary_source" in res.text:
+                payload_fallback = dict(payload)
+                del payload_fallback["summary_source"]
+                res = client.patch(f"{self.base_url}/calls?id=eq.{call_id}", json=payload_fallback, headers=self.headers)
             res.raise_for_status()
             data = res.json()
             return data[0] if data else None

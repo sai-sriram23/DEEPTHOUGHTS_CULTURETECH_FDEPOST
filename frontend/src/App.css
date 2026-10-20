@@ -1477,11 +1477,38 @@
 .summary-card-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #a5b4fc;
+}
+
+.summary-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-source-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  text-transform: none;
+}
+
+.summary-source-pill.source-llm {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.summary-source-pill.source-fallback {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .summary-text {

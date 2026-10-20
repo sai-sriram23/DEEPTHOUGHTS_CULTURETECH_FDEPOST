@@ -39,6 +39,9 @@ call_coding.csv
 index.csv
 index.json
 full_analysis_report.json
+analyze_transcripts.py
+DeepThought_FDE_Complete_Project_README.md
+TRANSCRIPTS_DATASET_README.md
 *.zip
 
 # Operating System & IDE

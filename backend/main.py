@@ -27,6 +27,7 @@ origins = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://deepthoughts-culturetech-fdepost.vercel.app"
 ]
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "").strip()
 if frontend_origin and frontend_origin not in origins:
@@ -34,7 +35,8 @@ if frontend_origin and frontend_origin not in origins:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if os.getenv("ENVIRONMENT") == "development" else origins,
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -161,7 +163,7 @@ async def close_call(call_id: str, payload: CloseCallRequest):
     )
 
     # 2. LLM Summary generation (falls back gracefully if LLM fails)
-    summary = await generate_call_summary(
+    summary, summary_source = await generate_call_summary(
         prospect=call.get("prospect", "Prospect"),
         company=call.get("company"),
         ended_stage=payload.ended_stage,
@@ -177,7 +179,8 @@ async def close_call(call_id: str, payload: CloseCallRequest):
             outcome=payload.outcome,
             next_step=payload.next_step,
             summary=summary,
-            outcome_flag=outcome_flag
+            outcome_flag=outcome_flag,
+            summary_source=summary_source
         )
         return updated_call
     except Exception as exc:
@@ -230,7 +233,7 @@ async def summarize_call_route(payload: SummarizeCallRequest):
             next_step = call.get("next_step", next_step)
             stage_results = db.get_stage_results(payload.call_id)
 
-    summary = await generate_call_summary(
+    summary, summary_source = await generate_call_summary(
         prospect=prospect,
         company=company,
         ended_stage=ended_stage,
@@ -238,4 +241,4 @@ async def summarize_call_route(payload: SummarizeCallRequest):
         next_step=next_step,
         stage_results=stage_results
     )
-    return {"summary": summary}
+    return {"summary": summary, "summary_source": summary_source}

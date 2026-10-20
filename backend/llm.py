@@ -1,12 +1,12 @@
 """
 LLM Integration Module (Google Gemini / Fallback)
 Provides one-line call summaries and outcome consistency checks.
-Strictly preserves prospect words and provides reliable fallbacks on timeouts/errors.
+Strictly preserves prospect words, returns summary_source, and provides reliable fallbacks.
 """
 import os
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import httpx
 
 logger = logging.getLogger("coldcall.llm")
@@ -40,12 +40,11 @@ def build_fallback_summary(
 
     next_step_str = ""
     if next_step and next_step.get("type") and next_step.get("type") != "none":
-        when = f" for {next_step.get('when')}" if next_step.get("when") else ""
-        channel = f" via {next_step.get('channel')}" if next_step.get("channel") else ""
+        when = f" for {next_step.get('when')}" if next_step.get('when') else ""
+        channel = f" via {next_step.get('channel')}" if next_step.get('channel') else ""
         next_step_str = f" Next step: {next_step.get('type')}{channel}{when}."
 
     if need_words:
-        # truncate need words to fit length
         truncated_need = (need_words[:45] + "...") if len(need_words) > 45 else need_words
         return f"Ended at {stage_name} ({outcome_str}). Need: '{truncated_need}'.{next_step_str}".strip()
 
@@ -59,17 +58,19 @@ async def generate_call_summary(
     outcome: Optional[str],
     next_step: Optional[Dict[str, Any]],
     stage_results: List[Dict[str, Any]]
-) -> str:
+) -> Tuple[str, str]:
     """
-    Generates a concise one-line call summary (<25 words) using the configured LLM,
-    or falls back cleanly if the LLM is unavailable.
+    Generates a concise one-line call summary (<25 words) using the configured LLM.
+    Returns: (summary_text, summary_source) where summary_source is 'llm' or 'fallback'.
     """
     api_key = os.getenv("LLM_API_KEY", "").strip()
     provider = os.getenv("LLM_PROVIDER", "gemini").lower()
-    model = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+    # Use current active Flash model from Google AI Studio (gemini-2.5-flash)
+    model = os.getenv("LLM_MODEL", "gemini-2.5-flash").strip()
 
     if not api_key:
-        return build_fallback_summary(ended_stage, outcome, next_step, stage_results)
+        logger.info("LLM_API_KEY not set. Using deterministic fallback summary.")
+        return build_fallback_summary(ended_stage, outcome, next_step, stage_results), "fallback"
 
     # Format structured context strictly from saved data
     history_lines = []
@@ -120,11 +121,12 @@ async def generate_call_summary(
                     if candidates:
                         text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
                         if text:
-                            # Clean any quotes or formatting
                             cleaned = text.strip('"\' \n\r')
-                            return cleaned
+                            logger.info(f"Gemini ({model}) successfully generated summary.")
+                            return cleaned, "llm"
+                else:
+                    logger.error(f"Gemini API returned status {res.status_code}: {res.text}")
         elif provider in ["mistral", "cerebras"]:
-            # OpenAI-compatible completions format
             endpoint = (
                 "https://api.mistral.ai/v1/chat/completions"
                 if provider == "mistral"
@@ -151,8 +153,11 @@ async def generate_call_summary(
                     if choices:
                         text = choices[0].get("message", {}).get("content", "").strip()
                         if text:
-                            return text.strip('"\' \n\r')
+                            return text.strip('"\' \n\r'), "llm"
+                else:
+                    logger.error(f"{provider.capitalize()} API returned status {res.status_code}: {res.text}")
     except Exception as exc:
-        logger.warning(f"LLM generation failed: {exc}. Using deterministic fallback.")
+        logger.error(f"LLM request failed: {exc}", exc_info=True)
 
-    return build_fallback_summary(ended_stage, outcome, next_step, stage_results)
+    logger.warning("Falling back to deterministic rule-based summary.")
+    return build_fallback_summary(ended_stage, outcome, next_step, stage_results), "fallback"

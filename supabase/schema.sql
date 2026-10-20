@@ -38,6 +38,7 @@ create table if not exists calls (
   )),
   next_step      jsonb,               -- {type, channel, when, proposed_by}
   summary        text,                -- LLM one-liner; never replaces prospect words
+  summary_source text,                -- 'llm' or 'fallback'
   outcome_flag   text,                -- reason a consistency check disagreed
   created_at     timestamptz not null default now()
 );
@@ -64,3 +65,7 @@ create index if not exists idx_calls_started on calls (started_at desc);
 alter table stages        enable row level security;
 alter table calls         enable row level security;
 alter table stage_results enable row level security;
+
+-- For existing deployments updating an earlier schema run:
+alter table calls add column if not exists summary_source text;
+
