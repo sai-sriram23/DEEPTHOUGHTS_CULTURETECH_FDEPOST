@@ -7,9 +7,12 @@ import json
 import uuid
 import sqlite3
 import datetime
+import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import httpx
+
+logger = logging.getLogger("coldcall.db")
 
 SQLITE_PATH = Path(__file__).parent / "local_coldcall.db"
 STAGE_CONTENT_PATH = Path(__file__).resolve().parent.parent / "stage_content.json"
@@ -331,6 +334,78 @@ class SupabaseDB:
             return data[0] if data else None
 
 
+class ResilientDB:
+    """
+    Transparently tries Supabase first. If Supabase is unavailable,
+    misconfigured (e.g. invalid key), or returns an error, it logs the exact
+    issue and immediately falls back to LocalSQLiteDB so the user's call session
+    is never interrupted with a 502 error.
+    """
+    def __init__(self, supabase: SupabaseDB, local: LocalSQLiteDB):
+        self.supabase = supabase
+        self.local = local
+
+    def get_stages(self) -> List[Dict[str, Any]]:
+        try:
+            return self.supabase.get_stages()
+        except Exception as exc:
+            logger.error(f"Supabase get_stages failed: {exc}. Using SQLite fallback.")
+            return self.local.get_stages()
+
+    def create_call(self, prospect: str, company: Optional[str]) -> Dict[str, Any]:
+        try:
+            return self.supabase.create_call(prospect, company)
+        except Exception as exc:
+            logger.error(f"Supabase create_call failed: {exc}. Using SQLite fallback.")
+            return self.local.create_call(prospect, company)
+
+    def get_call(self, call_id: str) -> Optional[Dict[str, Any]]:
+        try:
+            res = self.supabase.get_call(call_id)
+            if res:
+                return res
+        except Exception as exc:
+            logger.error(f"Supabase get_call failed: {exc}. Using SQLite fallback.")
+        return self.local.get_call(call_id)
+
+    def list_calls(self) -> List[Dict[str, Any]]:
+        try:
+            return self.supabase.list_calls()
+        except Exception as exc:
+            logger.error(f"Supabase list_calls failed: {exc}. Using SQLite fallback.")
+            return self.local.list_calls()
+
+    def upsert_stage_result(self, call_id: str, stage_number: int, what_happened: Optional[str], prospect_words: Optional[str]) -> Dict[str, Any]:
+        try:
+            return self.supabase.upsert_stage_result(call_id, stage_number, what_happened, prospect_words)
+        except Exception as exc:
+            logger.error(f"Supabase upsert_stage_result failed: {exc}. Using SQLite fallback.")
+            return self.local.upsert_stage_result(call_id, stage_number, what_happened, prospect_words)
+
+    def get_stage_results(self, call_id: str) -> List[Dict[str, Any]]:
+        try:
+            return self.supabase.get_stage_results(call_id)
+        except Exception as exc:
+            logger.error(f"Supabase get_stage_results failed: {exc}. Using SQLite fallback.")
+            return self.local.get_stage_results(call_id)
+
+    def close_call(
+        self,
+        call_id: str,
+        ended_stage: int,
+        outcome: str,
+        next_step: Optional[Dict[str, Any]],
+        summary: Optional[str],
+        outcome_flag: Optional[str],
+        summary_source: Optional[str] = "fallback"
+    ) -> Optional[Dict[str, Any]]:
+        try:
+            return self.supabase.close_call(call_id, ended_stage, outcome, next_step, summary, outcome_flag, summary_source)
+        except Exception as exc:
+            logger.error(f"Supabase close_call failed: {exc}. Using SQLite fallback.")
+            return self.local.close_call(call_id, ended_stage, outcome, next_step, summary, outcome_flag, summary_source)
+
+
 # Singleton instance selector
 _db_instance = None
 
@@ -339,11 +414,11 @@ def get_db():
     if _db_instance is None:
         supabase_url = os.getenv("SUPABASE_URL", "").strip()
         service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+        local_db = LocalSQLiteDB(SQLITE_PATH)
         if supabase_url and service_key and not supabase_url.startswith("https://your-project"):
-            try:
-                _db_instance = SupabaseDB(supabase_url, service_key)
-            except Exception:
-                _db_instance = LocalSQLiteDB(SQLITE_PATH)
+            supabase_db = SupabaseDB(supabase_url, service_key)
+            _db_instance = ResilientDB(supabase_db, local_db)
         else:
-            _db_instance = LocalSQLiteDB(SQLITE_PATH)
+            _db_instance = local_db
     return _db_instance
+

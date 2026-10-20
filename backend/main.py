@@ -3,6 +3,7 @@ FastAPI Backend for DeepThought Cold-Call Companion.
 Complies with the exact API contract in Section 9 of the project specification.
 """
 import os
+import logging
 from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,8 @@ from checks import check_outcome_consistency
 from llm import generate_call_summary
 
 load_dotenv()
+
+logger = logging.getLogger("coldcall.api")
 
 app = FastAPI(
     title="Cold-Call Companion API",
@@ -108,7 +111,8 @@ def get_stages():
         stages = db.get_stages()
         return stages
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Database unavailable")
+        logger.error(f"Error in get_stages: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Database error: {str(exc)}")
 
 
 @app.post("/calls", status_code=status.HTTP_201_CREATED)
@@ -119,7 +123,8 @@ def start_call(payload: CreateCallRequest):
         new_call = db.create_call(payload.prospect.strip(), payload.company.strip() if payload.company else None)
         return new_call
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Database unavailable")
+        logger.error(f"Error in start_call: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Database error: {str(exc)}")
 
 
 @app.post("/calls/{call_id}/stages", status_code=status.HTTP_200_OK)
@@ -139,7 +144,8 @@ def save_stage_result(call_id: str, payload: StageResultRequest):
         )
         return result
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Database unavailable")
+        logger.error(f"Error in save_stage_result: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Database error: {str(exc)}")
 
 
 @app.post("/calls/{call_id}/close", status_code=status.HTTP_200_OK)
@@ -184,7 +190,8 @@ async def close_call(call_id: str, payload: CloseCallRequest):
         )
         return updated_call
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Database unavailable")
+        logger.error(f"Error in close_call: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Database error: {str(exc)}")
 
 
 @app.get("/calls", status_code=status.HTTP_200_OK)
@@ -194,7 +201,8 @@ def list_calls():
         db = get_db()
         return db.list_calls()
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Database unavailable")
+        logger.error(f"Error in list_calls: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Database error: {str(exc)}")
 
 
 @app.get("/calls/{call_id}", status_code=status.HTTP_200_OK)
