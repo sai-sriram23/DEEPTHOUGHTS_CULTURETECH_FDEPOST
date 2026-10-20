@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, Mic, MicOff, Languages } from 'lucide-react';
+import { ShieldCheck, Mic, MicOff, Languages, AlertCircle } from 'lucide-react';
 
 export default function ProspectWords({
   stageNumber,
@@ -11,56 +11,89 @@ export default function ProspectWords({
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [lang, setLang] = useState('en-IN'); // Indian English default, or hi-IN
+  const [notice, setNotice] = useState(null);
+
   const recognitionRef = useRef(null);
+  const valueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
+
+  // Keep refs synchronized with props so effect doesn't tear down on every keystroke
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Initialize SpeechRecognition once
+  useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      setSpeechSupported(true);
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = false;
-      recognition.lang = lang;
-
-      recognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            transcript += event.results[i][0].transcript;
-          }
-        }
-        if (transcript.trim()) {
-          const newText = value ? `${value.trim()} ${transcript.trim()}` : transcript.trim();
-          onChange(newText.slice(0, 2000));
-        }
-      };
-
-      recognition.onerror = (event) => {
-        console.warn('Speech recognition notice:', event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return;
     }
 
-    return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch (e) {}
+    setSpeechSupported(true);
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = lang;
+
+    recognition.onresult = (event) => {
+      let speechText = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          speechText += event.results[i][0].transcript;
+        }
+      }
+      if (speechText.trim()) {
+        const prev = valueRef.current || '';
+        const updated = prev ? `${prev.trim()} ${speechText.trim()}` : speechText.trim();
+        if (onChangeRef.current) {
+          onChangeRef.current(updated.slice(0, 2000));
+        }
       }
     };
-  }, [lang, value, onChange]);
+
+    recognition.onerror = (event) => {
+      console.warn('Speech recognition notice:', event.error);
+      if (event.error === 'not-allowed') {
+        setNotice('Mic blocked. Click lock icon in browser address bar to allow.');
+        setIsListening(false);
+      } else if (event.error === 'no-speech') {
+        // User paused speaking; keep active
+      } else {
+        setNotice(`Mic notice: ${event.error}`);
+        setIsListening(false);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      try {
+        recognition.abort();
+      } catch (e) {}
+    };
+  }, [lang]);
 
   const toggleListening = () => {
-    if (!recognitionRef.current) return;
+    if (!recognitionRef.current) {
+      setNotice('Speech recognition not supported in this browser.');
+      return;
+    }
+
+    setNotice(null);
 
     if (isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
       setIsListening(false);
     } else {
       try {
@@ -68,7 +101,19 @@ export default function ProspectWords({
         recognitionRef.current.start();
         setIsListening(true);
       } catch (err) {
-        console.warn('Speech start error:', err);
+        console.warn('Speech start warning:', err);
+        // If already active or transitioning, stop then restart
+        try {
+          recognitionRef.current.stop();
+          setTimeout(() => {
+            try {
+              recognitionRef.current.start();
+              setIsListening(true);
+            } catch (e) {
+              setNotice('Please click Dictate again to start.');
+            }
+          }, 200);
+        } catch (e) {}
       }
     }
   };
@@ -76,8 +121,14 @@ export default function ProspectWords({
   const toggleLang = () => {
     const nextLang = lang === 'en-IN' ? 'hi-IN' : 'en-IN';
     setLang(nextLang);
-    if (recognitionRef.current) {
-      recognitionRef.current.lang = nextLang;
+    if (isListening && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        setTimeout(() => {
+          recognitionRef.current.lang = nextLang;
+          recognitionRef.current.start();
+        }, 200);
+      } catch (e) {}
     }
   };
 
@@ -126,6 +177,13 @@ export default function ProspectWords({
           <span className="char-count">{value.length}/2000</span>
         </div>
       </div>
+
+      {notice && (
+        <div className="dictate-notice-banner animate-fade-in">
+          <AlertCircle size={13} className="shrink-0 text-amber-400" />
+          <span>{notice}</span>
+        </div>
+      )}
 
       <div className="textarea-wrapper">
         <textarea
