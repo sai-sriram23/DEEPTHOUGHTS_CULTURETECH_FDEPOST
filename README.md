@@ -16,7 +16,7 @@
 - **Live Vercel Application:** [https://deepthoughts-culturetech-fdepost.vercel.app](https://deepthoughts-culturetech-fdepost.vercel.app) *(or locally at `http://localhost:5173`)*
 - **Render Backend Liveness:** [https://deepthoughts-culturetech-fdepost.onrender.com/health](https://deepthoughts-culturetech-fdepost.onrender.com/health) *(or locally at `http://localhost:8000/health`)*
 - **Google Drive Demo Video:** `<drive-link-anyone-with-link-can-view>` *(min 6 minutes, face on camera)*
-- **LLM Provider & Model:** **Google Gemini (gemini-2.5-flash via Google AI Studio)**
+- **LLM Provider & Model:** **Google Gemini (gemini-3.5-flash via Google AI Studio)**
 - **LLM Features & Provenance:**
   1. *Post-Call One-Line Summary:* Grounded, deterministic <25-word synthesis strictly derived from recorded stage data.
   2. *Provenance Tracking (`summary_source`):* The close endpoint returns `summary_source: "llm" | "fallback"`. The UI explicitly displays a provenance badge (`✨ Gemini AI` vs `Rule-based fallback`) on call details.
@@ -231,7 +231,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
   - `SUPABASE_URL`: `https://<your-project>.supabase.co`
   - `SUPABASE_SERVICE_ROLE_KEY`: `<your-supabase-service-role-key>`
   - `LLM_PROVIDER`: `gemini`
-  - `LLM_MODEL`: `gemini-2.5-flash`
+  - `LLM_MODEL`: `gemini-3.5-flash`
   - `LLM_API_KEY`: `<your-google-ai-studio-api-key>`
   - `FRONTEND_ORIGIN`: `https://deepthoughts-culturetech-fdepost.vercel.app`
 

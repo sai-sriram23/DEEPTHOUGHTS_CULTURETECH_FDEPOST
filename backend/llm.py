@@ -65,8 +65,8 @@ async def generate_call_summary(
     """
     api_key = os.getenv("LLM_API_KEY", "").strip()
     provider = os.getenv("LLM_PROVIDER", "gemini").lower()
-    # Use current active Flash model from Google AI Studio (gemini-2.5-flash)
-    model = os.getenv("LLM_MODEL", "gemini-2.5-flash").strip()
+    # Use current active Flash model from Google AI Studio (gemini-3.5-flash)
+    model = os.getenv("LLM_MODEL", "gemini-3.5-flash").strip()
 
     if not api_key:
         logger.info("LLM_API_KEY not set. Using deterministic fallback summary.")
@@ -115,6 +115,11 @@ async def generate_call_summary(
             }
             async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.post(url, json=payload)
+                if res.status_code != 200 and model != "gemini-3.5-flash":
+                    logger.warning(f"Gemini ({model}) failed ({res.status_code}). Retrying with active model gemini-3.5-flash...")
+                    fallback_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_key}"
+                    res = await client.post(fallback_url, json=payload)
+
                 if res.status_code == 200:
                     data = res.json()
                     candidates = data.get("candidates", [])
@@ -122,7 +127,7 @@ async def generate_call_summary(
                         text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
                         if text:
                             cleaned = text.strip('"\' \n\r')
-                            logger.info(f"Gemini ({model}) successfully generated summary.")
+                            logger.info(f"Gemini successfully generated summary: {cleaned}")
                             return cleaned, "llm"
                 else:
                     logger.error(f"Gemini API returned status {res.status_code}: {res.text}")
