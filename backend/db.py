@@ -247,7 +247,32 @@ class SupabaseDB:
         with httpx.Client(timeout=8.0) as client:
             res = client.get(f"{self.base_url}/stages?select=*&order=stage_number.asc", headers=self.headers)
             res.raise_for_status()
-            return res.json()
+            stages = res.json()
+            if not stages and STAGE_CONTENT_PATH.exists():
+                try:
+                    with open(STAGE_CONTENT_PATH, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    seed_payload = [
+                        {
+                            "stage_number": s["stage_number"],
+                            "name": s["name"],
+                            "purpose": s["purpose"],
+                            "likely_statements": s["likely_statements"],
+                            "quick_outcomes": s["quick_outcomes"],
+                            "watch_out": s.get("watch_out"),
+                            "next_stage_number": s.get("next_stage_number")
+                        }
+                        for s in data
+                    ]
+                    headers = dict(self.headers)
+                    headers["Prefer"] = "resolution=merge-duplicates,return=representation"
+                    client.post(f"{self.base_url}/stages", json=seed_payload, headers=headers)
+                    res_recheck = client.get(f"{self.base_url}/stages?select=*&order=stage_number.asc", headers=self.headers)
+                    if res_recheck.status_code == 200 and res_recheck.json():
+                        return res_recheck.json()
+                except Exception as seed_err:
+                    logger.warning(f"Auto-seeding stages failed: {seed_err}")
+            return stages
 
     def create_call(self, prospect: str, company: Optional[str]) -> Dict[str, Any]:
         payload = {
