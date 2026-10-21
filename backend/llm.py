@@ -1,7 +1,7 @@
 """
 LLM Integration Module (Groq / Gemini / Fallback)
 Provides one-line call summaries and outcome consistency checks.
-Supports high-throughput Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
+Supports high-throughput Groq API (openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b)
 while presenting as Gemini AI on the frontend UI.
 """
 import os
@@ -85,7 +85,6 @@ async def generate_call_summary(
         is_groq = True
     elif llm_api_key:
         active_key = llm_api_key
-        # Check if key is Groq or Gemini
         is_groq = llm_api_key.startswith("gsk_")
     elif gemini_api_key:
         active_key = gemini_api_key
@@ -127,43 +126,42 @@ async def generate_call_summary(
 
     # 2. Try Groq (Primary high free-tier engine)
     if is_groq:
-        groq_model = model if (model and not model.startswith("gemini-")) else "llama-3.3-70b-versatile"
+        preferred_model = model if (model and not model.startswith("gemini-")) else "openai/gpt-oss-120b"
+        candidate_models = [preferred_model]
+        for fallback_m in ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b", "llama-3.3-70b-versatile"]:
+            if fallback_m not in candidate_models:
+                candidate_models.append(fallback_m)
+
         endpoint = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {active_key}",
             "Content-Type": "application/json"
         }
-        payload = {
-            "model": groq_model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.2,
-            "max_tokens": 80
-        }
 
         try:
             async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.post(endpoint, headers=headers, json=payload)
-
-                # If 70b is rate-limited or fails, try 8b instant
-                if res.status_code != 200 and groq_model != "llama-3.1-8b-instant":
-                    logger.warning(f"Groq ({groq_model}) returned {res.status_code}. Retrying with llama-3.1-8b-instant...")
-                    payload["model"] = "llama-3.1-8b-instant"
+                for candidate in candidate_models:
+                    payload = {
+                        "model": candidate,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.2,
+                        "max_tokens": 80
+                    }
                     res = await client.post(endpoint, headers=headers, json=payload)
-
-                if res.status_code == 200:
-                    data = res.json()
-                    choices = data.get("choices", [])
-                    if choices:
-                        raw_text = choices[0].get("message", {}).get("content", "").strip()
-                        if raw_text:
-                            cleaned = raw_text.strip('"\' \n\r')
-                            logger.info(f"Groq API successfully generated summary: {cleaned}")
-                            return cleaned, "llm"
-                else:
-                    logger.error(f"Groq API returned status {res.status_code}: {res.text}")
+                    if res.status_code == 200:
+                        data = res.json()
+                        choices = data.get("choices", [])
+                        if choices:
+                            raw_text = choices[0].get("message", {}).get("content", "").strip()
+                            if raw_text:
+                                cleaned = raw_text.strip('"\' \n\r')
+                                logger.info(f"Groq API ({candidate}) successfully generated summary: {cleaned}")
+                                return cleaned, "llm"
+                    else:
+                        logger.warning(f"Groq ({candidate}) returned {res.status_code}. Trying next candidate...")
         except Exception as exc:
             logger.error(f"Groq API call error: {exc}", exc_info=True)
 
