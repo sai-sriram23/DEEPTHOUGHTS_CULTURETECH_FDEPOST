@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { X, PhoneCall, Sparkles, Building2, User } from 'lucide-react';
 
 const PRESETS = [
-  { prospect: 'Arvind Sharma', company: 'Sharma Precision Components', note: 'Standard pitch & next step' },
-  { prospect: 'Reception / Switchboard', company: 'Orbit Fasteners', note: 'Early gatekeeper test' },
-  { prospect: 'Rajesh Mehra', company: 'Kalyx Enterprises', note: 'Objection & deflection test' }
+  { prospect: 'Dr. Anjali Menon', company: 'Menon Family Clinic', note: 'Reference case study' },
+  { prospect: 'Dr. Rao', company: 'Sunrise Dental', note: 'Agreed next step' },
+  { prospect: 'Reception', company: 'Lotus Skin Clinic', note: 'Opening gatekeeper' },
+  { prospect: 'Dr. Fernandes', company: 'Harbour Physio', note: 'Accountant objection' },
+  { prospect: 'Mr. Iyer', company: 'Iyer Eye Care', note: 'Their need on WhatsApp' },
+  { prospect: 'Arvind Sharma', company: 'Sharma Precision Components', note: 'Standard manufacturing' }
 ];
 
 export default function NewCallModal({ isOpen, onClose, onStartCall, isStarting }) {
-  const [prospect, setProspect] = useState('');
-  const [company, setCompany] = useState('');
+  const [prospect, setProspect] = useState('Dr. Anjali Menon');
+  const [company, setCompany] = useState('Menon Family Clinic');
 
   if (!isOpen) return null;
 
@@ -30,7 +33,7 @@ export default function NewCallModal({ isOpen, onClose, onStartCall, isStarting 
         <div className="modal-header">
           <div>
             <h3 className="modal-title">Start New Cold Call</h3>
-            <span className="modal-subtitle">Initialize call session beside your dialer</span>
+            <span className="modal-subtitle">Launch companion beside your dialer</span>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} disabled={isStarting}>
             <X size={18} />
@@ -40,14 +43,14 @@ export default function NewCallModal({ isOpen, onClose, onStartCall, isStarting 
         <form onSubmit={handleSubmit} className="new-call-form">
           <div className="form-group">
             <label className="form-label" htmlFor="prospect-input">
-              <User size={14} className="inline mr-1" />
-              Prospect Name <span className="text-red-400">*</span>
+              <User size={14} className="inline mr-1 text-slate-500" />
+              Prospect Name <span className="text-red-500">*</span>
             </label>
             <input
               id="prospect-input"
               type="text"
               className="form-input"
-              placeholder="e.g. Arvind Sharma or Reception"
+              placeholder="e.g. Dr. Anjali Menon"
               value={prospect}
               onChange={(e) => setProspect(e.target.value)}
               required
@@ -57,23 +60,23 @@ export default function NewCallModal({ isOpen, onClose, onStartCall, isStarting 
 
           <div className="form-group">
             <label className="form-label" htmlFor="company-input">
-              <Building2 size={14} className="inline mr-1" />
-              Company Name (optional)
+              <Building2 size={14} className="inline mr-1 text-slate-500" />
+              Company / Clinic Name
             </label>
             <input
               id="company-input"
               type="text"
               className="form-input"
-              placeholder="e.g. Sharma Precision Components"
+              placeholder="e.g. Menon Family Clinic"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
             />
           </div>
 
-          {/* Quick presets for swift testing/demo */}
+          {/* Quick presets matching screenshot cases */}
           <div className="presets-section">
             <span className="presets-label">
-              <Sparkles size={12} className="text-amber-400 inline mr-1" />
+              <Sparkles size={12} className="text-amber-500 inline mr-1" />
               Quick Demo Presets:
             </span>
             <div className="presets-list">
@@ -105,8 +108,8 @@ export default function NewCallModal({ isOpen, onClose, onStartCall, isStarting 
               className="btn-modal-start"
               disabled={!prospect.trim() || isStarting}
             >
-              <PhoneCall size={15} />
-              <span>{isStarting ? 'Connecting...' : 'Begin Call'}</span>
+              <PhoneCall size={14} />
+              <span>{isStarting ? 'Starting...' : 'Begin Call'}</span>
             </button>
           </div>
         </form>

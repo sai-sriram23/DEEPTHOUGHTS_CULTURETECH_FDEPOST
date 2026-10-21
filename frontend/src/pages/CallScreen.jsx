@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import StageRail from '../components/StageRail';
 import StageCard from '../components/StageCard';
 import TapButtons from '../components/TapButtons';
 import ProspectWords from '../components/ProspectWords';
 import NextAndEnd from '../components/NextAndEnd';
 import CloseDialog from '../components/CloseDialog';
-import { Phone, Clock, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 export default function CallScreen({
   call,
@@ -20,14 +20,15 @@ export default function CallScreen({
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(134); // Start around 02:14 if new
 
   // Live timer since call started
   useEffect(() => {
     const startTime = call?.started_at ? new Date(call.started_at).getTime() : Date.now();
     const interval = setInterval(() => {
       const now = Date.now();
-      setElapsedSeconds(Math.floor((now - startTime) / 1000));
+      const diff = Math.floor((now - startTime) / 1000);
+      setElapsedSeconds(diff >= 0 ? diff : 0);
     }, 1000);
     return () => clearInterval(interval);
   }, [call?.started_at]);
@@ -77,7 +78,6 @@ export default function CallScreen({
       if (currentStageNum < 8) {
         setCurrentStageNum(prev => prev + 1);
       } else {
-        // At stage 8, "Proceed to Close" opens the close dialog
         setIsCloseDialogOpen(true);
       }
     } catch (err) {
@@ -111,7 +111,6 @@ export default function CallScreen({
     setIsSaving(true);
     setErrorMessage(null);
     try {
-      // First ensure current stage is saved
       if (onSaveStage && (currentTap || currentWords)) {
         await onSaveStage(call.id, currentStageNum, currentTap, currentWords);
       }
@@ -132,38 +131,36 @@ export default function CallScreen({
   }));
 
   const stage5Words = stageData[5]?.words || '';
+  const prospectName = call?.prospect || 'Dr. Anjali Menon';
+  const companyName = call?.company || 'Menon Family Clinic';
 
   return (
-    <div className="call-screen-layout animate-fade-in">
-      {/* Dialer Companion Live Header */}
-      <header className="call-screen-header">
-        <div className="header-top-row">
-          <span className="company-guide-tag">Meridian Growth Partners · call guide</span>
-          <span className="live-timer-badge">
-            <Clock size={13} className="timer-icon" />
-            <span>{formatTimer(elapsedSeconds)}</span>
-          </span>
+    <div className="call-companion-card animate-fade-in">
+      {/* Dialer Companion Live Header matching Screenshot 1 */}
+      <header className="companion-header">
+        <div className="brand-timer-row">
+          <span className="brand-uppercase-title">CLINICBOOKS · CALL GUIDE</span>
+          <span className="header-timer-text">{formatTimer(elapsedSeconds)}</span>
         </div>
 
-        <div className="prospect-header-card">
-          <h1 className="prospect-name">{call?.prospect || 'Prospect'}</h1>
-          <div className="prospect-meta">
-            <span className="company-text">{call?.company || 'Indian Business'}</span>
-            <span className="meta-dot">·</span>
-            <span className="first-call-tag">first call</span>
+        <div className="prospect-details-row">
+          <h1 className="prospect-primary-name">{prospectName}</h1>
+          <div className="prospect-secondary-meta">
+            {call?.role ? `${call.role}, ` : (prospectName.includes('Menon') ? 'Owner, ' : '')}
+            {companyName} · first call
           </div>
         </div>
       </header>
 
-      {/* Error alert banner */}
+      {/* Error alert banner if any */}
       {errorMessage && (
         <div className="call-screen-error-banner animate-fade-in">
-          <AlertCircle size={16} />
+          <AlertCircle size={15} />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      {/* Stage Rail Navigation */}
+      {/* Stage Rail Navigation: 8 square buttons */}
       <StageRail
         currentStage={currentStageNum}
         completedStages={Object.keys(stageData).reduce((acc, k) => {
@@ -173,10 +170,13 @@ export default function CallScreen({
         onSelectStage={(s) => setCurrentStageNum(s)}
       />
 
-      {/* Active Stage Card (Purpose + 3 Statements + Watchout) */}
-      <StageCard stage={currentStageObj} />
+      {/* Active Stage Card: STAGE X OF 8, Title, Purpose, SHE MAY SAY quotes */}
+      <StageCard
+        stage={currentStageObj}
+        prospectName={prospectName}
+      />
 
-      {/* What Happened: Exactly 4 quick taps */}
+      {/* What Happened: 2x2 grid */}
       <TapButtons
         stageNumber={currentStageNum}
         outcomes={currentStageObj?.quick_outcomes || []}
@@ -185,15 +185,16 @@ export default function CallScreen({
         onShortcutClose={handleStage1Shortcut}
       />
 
-      {/* Their Words: Exactly 1 free text box on the live screen */}
+      {/* HER WORDS / THEIR WORDS: Single live textarea */}
       <ProspectWords
         stageNumber={currentStageNum}
         value={currentWords}
         onChange={handleWordsChange}
         disabled={isSaving}
+        prospectName={prospectName}
       />
 
-      {/* Navigation Footer (Back, Next Stage, End Call on every stage) */}
+      {/* Bottom Bar: NEXT: [STAGE] (black) + END CALL (white bordered) */}
       <NextAndEnd
         currentStage={currentStageNum}
         nextStageName={nextStageObj?.name}

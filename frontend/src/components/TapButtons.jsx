@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, CornerDownRight } from 'lucide-react';
+import { CornerDownRight } from 'lucide-react';
 
 export default function TapButtons({
   stageNumber,
@@ -9,41 +9,23 @@ export default function TapButtons({
   onShortcutClose
 }) {
   const isStage1 = stageNumber === 1;
-  const isStage6 = stageNumber === 6;
-
-  // Classify Stage 6 objections as deflection or hard no
-  const getObjectionTag = (tap) => {
-    if (!tap) return null;
-    if (tap.toLowerCase().includes('not interested')) {
-      return { text: 'Hard no', className: 'tag-hard-no' };
-    }
-    return { text: 'Deflection', className: 'tag-deflection' };
-  };
-
-  const objectionTag = isStage6 && selectedTap ? getObjectionTag(selectedTap) : null;
 
   return (
-    <div className="what-happened-section">
-      <div className="section-label-row">
-        <span className="section-label">What happened</span>
-        {objectionTag && (
-          <span className={`objection-badge ${objectionTag.className}`}>
-            Tag: {objectionTag.text}
-          </span>
-        )}
+    <div className="what-happened-block">
+      <div className="section-label-header">
+        WHAT HAPPENED
       </div>
 
-      <div className="tap-grid">
+      <div className="tap-grid-2x2">
         {outcomes.map((tap, idx) => {
           const isSelected = selectedTap === tap;
           return (
             <button
               key={idx}
               type="button"
-              className={`tap-btn ${isSelected ? 'selected' : ''}`}
+              className={`tap-option-btn ${isSelected ? 'selected' : ''}`}
               onClick={() => onSelectTap(tap)}
             >
-              {isSelected && <Check size={14} className="tap-check-icon" />}
               <span>{tap}</span>
             </button>
           );

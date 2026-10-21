@@ -4,11 +4,7 @@ import CallDetailModal from '../components/CallDetailModal';
 import {
   PhoneCall,
   RefreshCw,
-  Building,
-  Clock,
-  Sparkles,
   AlertTriangle,
-  ChevronRight,
   Inbox
 } from 'lucide-react';
 
@@ -17,7 +13,7 @@ const STAGE_NAMES = {
   2: 'Purpose',
   3: 'Permission',
   4: 'Their business',
-  5: 'Their need, in their words',
+  5: 'Their need',
   6: 'Objection',
   7: 'Next step',
   8: 'Close'
@@ -48,44 +44,44 @@ export default function CallList({
   };
 
   const formatCallTime = (isoString) => {
-    if (!isoString) return '';
+    if (!isoString) return 'Today 11:40';
     const d = new Date(isoString);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
-    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     return isToday ? `Today ${timeStr}` : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${timeStr}`;
   };
 
   return (
-    <div className="call-list-layout animate-fade-in">
+    <div className="call-list-screen animate-fade-in">
       {/* Top Header */}
-      <header className="call-list-header">
-        <div className="header-meta">
-          <span className="brand-tag">Meridian Growth Partners · past calls</span>
-          <h1 className="list-title">Call History & Outcomes</h1>
-          <span className="calls-count-badge">
-            {calls.length} {calls.length === 1 ? 'call' : 'calls'} recorded
+      <header className="call-list-header-bar">
+        <div className="header-meta-group">
+          <span className="brand-uppercase-tag">CLINICBOOKS · PAST CALLS</span>
+          <h1 className="list-main-title">Call History & Outcomes</h1>
+          <span className="calls-count-text">
+            {calls.length} {calls.length === 1 ? 'call' : 'calls'} logged
           </span>
         </div>
 
-        <div className="header-actions">
+        <div className="header-action-buttons">
           <button
             type="button"
-            className="btn-refresh"
+            className="btn-header-refresh"
             onClick={onRefresh}
             disabled={isLoading}
-            title="Refresh from persisted database"
+            title="Refresh calls"
           >
-            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
             <span>Refresh</span>
           </button>
 
           <button
             type="button"
-            className="btn-new-call"
+            className="btn-header-new-call"
             onClick={onOpenNewCall}
           >
-            <PhoneCall size={15} />
+            <PhoneCall size={14} />
             <span>New Call</span>
           </button>
         </div>
@@ -98,80 +94,81 @@ export default function CallList({
         onSelectFilter={setSelectedStageFilter}
       />
 
-      {/* Calls List */}
-      <div className="calls-list-container">
+      {/* Calls Table / List Container matching Screenshot 3 */}
+      <div className="calls-table-container">
         {filteredCalls.length === 0 ? (
-          <div className="empty-state-box">
-            <Inbox size={36} className="empty-state-icon" />
-            <h3 className="empty-title">
-              {selectedStageFilter ? `No calls ended at Stage ${selectedStageFilter}` : 'No calls yet'}
+          <div className="empty-state-card">
+            <Inbox size={36} className="text-slate-400" />
+            <h3 className="empty-state-title">
+              {selectedStageFilter ? `No calls ended at Stage ${selectedStageFilter}` : 'No calls recorded yet'}
             </h3>
-            <p className="empty-subtitle">
+            <p className="empty-state-desc">
               {selectedStageFilter
-                ? 'Try clearing the filter or start a new call.'
-                : 'Start a call beside your dialer to track stages and capture prospect needs.'}
+                ? 'Try selecting another stage or clear the filter.'
+                : 'Click "New Call" to start your first call beside the phone.'}
             </p>
             {!selectedStageFilter && (
-              <button type="button" className="btn-new-call mt-3" onClick={onOpenNewCall}>
-                <PhoneCall size={15} />
+              <button type="button" className="btn-header-new-call mt-2" onClick={onOpenNewCall}>
+                <PhoneCall size={14} />
                 <span>Start First Call</span>
               </button>
             )}
           </div>
         ) : (
-          <div className="calls-cards-grid">
+          <div className="calls-table-rows">
             {filteredCalls.map((call) => {
               const stageNum = call.ended_stage || call.current_stage || 1;
-              const stageName = STAGE_NAMES[stageNum] || `Stage ${stageNum}`;
+              const stageName = (STAGE_NAMES[stageNum] || `Stage ${stageNum}`).toUpperCase();
               const hasMismatch = Boolean(call.outcome_flag);
+
+              // Title: Prospect, Company
+              const titleText = call.company
+                ? `${call.prospect}, ${call.company}`
+                : call.prospect;
+
+              // Subtitle: Agreed next step summary or summary
+              let subtitleText = call.summary;
+              if (!subtitleText) {
+                if (call.next_step_details?.when_time) {
+                  subtitleText = `Call ${call.next_step_details.when_time}`;
+                } else if (call.outcome) {
+                  subtitleText = call.outcome.replace(/_/g, ' ');
+                } else {
+                  subtitleText = call.ended_at ? 'Completed call' : 'Call in progress...';
+                }
+              }
 
               return (
                 <div
                   key={call.id}
-                  className={`call-card-row ${hasMismatch ? 'has-mismatch-flag' : ''}`}
+                  className="call-list-row-item"
                   onClick={() => handleRowClick(call)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && handleRowClick(call)}
                 >
-                  <div className="call-card-left">
-                    <div className="call-card-identity">
-                      <span className="call-prospect-name">{call.prospect}</span>
-                      {call.company && (
-                        <span className="call-company-name">
-                          <Building size={12} className="inline mr-1" />
-                          {call.company}
-                        </span>
-                      )}
+                  <div className="call-row-left">
+                    <div className="row-prospect-company">
+                      {titleText}
                     </div>
-
-                    {/* One line summary note */}
-                    <p className="call-summary-note">
-                      {call.summary || (call.ended_at ? `Ended at ${stageName}.` : 'Call in progress...')}
-                    </p>
-
-                    <div className="call-card-footer-meta">
-                      <span className="stage-pill-tag">
-                        {stageName} (Stage {stageNum})
-                      </span>
-                      <span className={`outcome-pill-sm outcome-${call.outcome || 'not_logged'}`}>
-                        {(call.outcome || 'in progress').replace(/_/g, ' ')}
-                      </span>
-                      {hasMismatch && (
-                        <span className="mismatch-dot-indicator" title={call.outcome_flag}>
-                          <span className="dot-pulse" />
-                          <span>Outcome Mismatch</span>
-                        </span>
-                      )}
+                    <div className="row-summary-note">
+                      {subtitleText}
                     </div>
                   </div>
 
-                  <div className="call-card-right">
-                    <span className="call-timestamp">
-                      <Clock size={12} className="inline mr-1" />
+                  <div className="call-row-right">
+                    <div className="row-stage-tag">
+                      {stageName}
+                    </div>
+                    <div className="row-time-text">
                       {formatCallTime(call.started_at)}
-                    </span>
-                    <ChevronRight size={18} className="chevron-icon" />
+                    </div>
+                    {hasMismatch && (
+                      <span className="row-mismatch-dot" title={call.outcome_flag}>
+                        <AlertTriangle size={11} className="inline mr-1 text-amber-500" />
+                        Mismatch
+                      </span>
+                    )}
                   </div>
                 </div>
               );

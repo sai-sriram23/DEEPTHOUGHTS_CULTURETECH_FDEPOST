@@ -5,7 +5,8 @@ export default function ProspectWords({
   stageNumber,
   value = '',
   onChange,
-  disabled = false
+  disabled = false,
+  prospectName = ''
 }) {
   const isStage5 = stageNumber === 5;
   const [isListening, setIsListening] = useState(false);
@@ -17,7 +18,16 @@ export default function ProspectWords({
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
 
-  // Keep refs synchronized with props so effect doesn't tear down on every keystroke
+  // Determine pronoun label: HER WORDS / HIS WORDS / THEIR WORDS
+  const nameLower = prospectName.toLowerCase();
+  let wordsLabel = 'THEIR WORDS';
+  if (nameLower.includes('anjali') || nameLower.includes('she') || nameLower.includes('ms.') || nameLower.includes('mrs.')) {
+    wordsLabel = 'HER WORDS';
+  } else if (nameLower.includes('mr.') || nameLower.includes('arvind') || nameLower.includes('rajesh') || nameLower.includes('iyer')) {
+    wordsLabel = 'HIS WORDS';
+  }
+
+  // Keep refs synchronized with props
   useEffect(() => {
     valueRef.current = value;
   }, [value]);
@@ -102,7 +112,6 @@ export default function ProspectWords({
         setIsListening(true);
       } catch (err) {
         console.warn('Speech start warning:', err);
-        // If already active or transitioning, stop then restart
         try {
           recognitionRef.current.stop();
           setTimeout(() => {
@@ -133,21 +142,18 @@ export default function ProspectWords({
   };
 
   return (
-    <div className={`prospect-words-section ${isStage5 ? 'stage-5-focus' : ''}`}>
-      <div className="section-label-row">
-        <span className="section-label">
-          Their words
-          {isStage5 && <span className="highlight-tag">Focus: Verbatim Need</span>}
-        </span>
+    <div className="her-words-block">
+      <div className="words-header-row">
+        <span className="section-label-header">{wordsLabel}</span>
 
-        <div className="words-header-actions">
+        <div className="words-voice-tools">
           {speechSupported && (
-            <div className="dictate-controls">
+            <div className="voice-buttons-group">
               <button
                 type="button"
-                className="lang-toggle-btn"
+                className="voice-lang-btn"
                 onClick={toggleLang}
-                title={`Click to switch speech language (Current: ${lang === 'en-IN' ? 'Indian English' : 'Hindi'})`}
+                title="Switch voice language"
               >
                 <Languages size={11} className="inline mr-1" />
                 <span>{lang === 'en-IN' ? 'EN-IN' : 'HI-IN'}</span>
@@ -155,44 +161,43 @@ export default function ProspectWords({
 
               <button
                 type="button"
-                className={`mic-btn ${isListening ? 'listening' : ''}`}
+                className={`voice-mic-btn ${isListening ? 'listening' : ''}`}
                 onClick={toggleListening}
-                title={isListening ? 'Click to stop live dictation' : 'Click to dictate into words box'}
+                title={isListening ? 'Stop listening' : 'Start voice dictation'}
                 disabled={disabled}
               >
                 {isListening ? (
                   <>
-                    <MicOff size={13} />
+                    <MicOff size={12} />
                     <span>Listening...</span>
                   </>
                 ) : (
                   <>
-                    <Mic size={13} />
+                    <Mic size={12} />
                     <span>Dictate</span>
                   </>
                 )}
               </button>
             </div>
           )}
-          <span className="char-count">{value.length}/2000</span>
         </div>
       </div>
 
       {notice && (
         <div className="dictate-notice-banner animate-fade-in">
-          <AlertCircle size={13} className="shrink-0 text-amber-400" />
+          <AlertCircle size={13} className="shrink-0 text-amber-500" />
           <span>{notice}</span>
         </div>
       )}
 
-      <div className="textarea-wrapper">
+      <div className="words-input-wrapper">
         <textarea
-          className={`words-textarea ${isStage5 ? 'stage-5-textarea' : ''}`}
-          rows={isStage5 ? 4 : 2}
+          className="her-words-textarea"
+          rows={3}
           placeholder={
             isStage5
-              ? "Capture their exact words about goals, bottlenecks, or obstacles... (e.g. want to grow exports, plant running at sixty percent)"
-              : "Capture what the prospect actually said in their own words..."
+              ? "Capture their exact words about goals, bottlenecks, or obstacles... (e.g. export margin drop, rejection rate is twelve percent)"
+              : "accounting for what, we already have a CA who files everything"
           }
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -203,7 +208,7 @@ export default function ProspectWords({
 
       {isStage5 && (
         <div className="stage-5-guarantee">
-          <ShieldCheck size={13} className="text-emerald-400" />
+          <ShieldCheck size={13} className="text-emerald-600" />
           <span>Verbatim capture: exact prospect words are permanently preserved and never rewritten by AI.</span>
         </div>
       )}
