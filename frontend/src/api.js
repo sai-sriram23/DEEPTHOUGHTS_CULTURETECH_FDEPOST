@@ -1,9 +1,21 @@
 /**
  * API Client for Cold-Call Companion Backend
+ * Automatically defaults to live Render backend in production (e.g. Vercel)
+ * and localhost:8000 during local development.
  */
 import fallbackStages from './data/stage_content.json';
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const isProductionDomain = typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1';
+
+const DEFAULT_PROD_API = 'https://deepthoughts-culturetech-fdepost.onrender.com';
+const DEFAULT_DEV_API = 'http://localhost:8000';
+
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (isProductionDomain ? DEFAULT_PROD_API : DEFAULT_DEV_API)
+).replace(/\/$/, '');
 
 async function handleResponse(res) {
   if (!res.ok) {

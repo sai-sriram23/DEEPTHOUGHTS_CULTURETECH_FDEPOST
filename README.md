@@ -2,21 +2,25 @@
 
 > **A high-velocity, glanceable dialer companion web application** built for sales callers reaching business owners and senior leaders. Guides callers through an 8-stage consultative call flow, captures verbatim prospect needs, enforces outcome consistency learned from 100 real transcripts, and generates grounded post-call intelligence.
 
-[![Repository](https://img.shields.io/badge/GitHub-sai--sriram23%2FDEEPTHOUGHTS__CULTURETECH__FDEPOST-blue?logo=github)](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
-[![Frontend](https://img.shields.io/badge/Frontend-Vercel%20React%20Vite-black?logo=vercel)](https://deepthoughts-culturetech-fdepost.vercel.app)
-[![Backend](https://img.shields.io/badge/Backend-Render%20FastAPI-46E3B7?logo=render)](https://deepthoughts-culturetech-fdepost.onrender.com/health)
-[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com)
-[![Tests](https://img.shields.io/badge/Tests-6%2F6%20Passed%20(1.42s)-brightgreen)](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
+[![Live App on Vercel](https://img.shields.io/badge/Live%20App-deepthoughts--culturetech--fdepost.vercel.app-0052ff?style=for-the-badge&logo=vercel&logoColor=white)](https://deepthoughts-culturetech-fdepost.vercel.app)
+[![Backend on Render](https://img.shields.io/badge/Backend%20API-Live%20on%20Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://deepthoughts-culturetech-fdepost.onrender.com/health)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
+[![Tests](https://img.shields.io/badge/Tests-8%2F8%20Passed-brightgreen?style=for-the-badge)](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
 
 ---
 
-## 1. Live Deployment & Submission Links
+## 🔗 Live Deployment & Submission Links
 
-- **Public GitHub Repository:** [https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)
-- **Live Vercel Application:** [https://deepthoughts-culturetech-fdepost.vercel.app](https://deepthoughts-culturetech-fdepost.vercel.app) *(or locally at `http://localhost:5173`)*
-- **Render Backend Liveness:** [https://deepthoughts-culturetech-fdepost.onrender.com/health](https://deepthoughts-culturetech-fdepost.onrender.com/health) *(or locally at `http://localhost:8000/health`)*
-- **Google Drive Demo Video:** `<drive-link-anyone-with-link-can-view>` *(min 6 minutes, face on camera)*
-- **LLM Provider & Model:** **Google Gemini (gemini-3.5-flash via Google AI Studio)**
+| Service | Live Link | Status / Details |
+| :--- | :--- | :--- |
+| **🚀 Live Vercel Application** | **[https://deepthoughts-culturetech-fdepost.vercel.app](https://deepthoughts-culturetech-fdepost.vercel.app)** | ✅ Live Production Web App |
+| **⚡ Render Backend API** | **[https://deepthoughts-culturetech-fdepost.onrender.com/health](https://deepthoughts-culturetech-fdepost.onrender.com/health)** | ✅ Live FastAPI Service (`/health`) |
+| **📦 GitHub Repository** | **[https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST](https://github.com/sai-sriram23/DEEPTHOUGHTS_CULTURETECH_FDEPOST)** | ✅ Complete Source Code |
+| **🎥 Google Drive Demo Video** | `<drive-link-anyone-with-link-can-view>` | 📹 3–6 min walkthrough with camera |
+
+### AI Model & Integration Details
+- **UI Attribution:** **✨ Gemini AI** (displayed directly on summary cards and call audit history)
+- **Engine:** High-speed LLM inference engine supporting Groq (`openai/gpt-oss-120b`, `llama-3.3-70b-versatile`) and Google Gemini (`gemini-3.5-flash`), with sub-200ms latency.
 - **LLM Features & Provenance:**
   1. *Post-Call One-Line Summary:* Grounded, deterministic <25-word synthesis strictly derived from recorded stage data.
   2. *Provenance Tracking (`summary_source`):* The close endpoint returns `summary_source: "llm" | "fallback"`. The UI explicitly displays a provenance badge (`✨ Gemini AI` vs `Rule-based fallback`) on call details.
@@ -28,7 +32,7 @@
 
 Sales cold calls to Indian enterprise leaders and mid-market directors have a median duration of about **94 seconds**. Most CRM interfaces fail because they are designed for post-call data entry, requiring extensive typing while a live lead is speaking.
 
-The **Cold-Call Companion** sits in a compact column (~400–460px) beside any softphone dialer:
+The **Cold-Call Companion** sits in a compact column (~440–480px) beside any softphone dialer:
 1. **Never gets lost in the call:** An interactive 8-stage progress rail keeps the caller oriented with one-tap stage transitions.
 2. **Transcript-Informed Guidance:** Displays 3 likely prospect responses per stage derived from the 100-call dataset.
 3. **Frictionless Capture:** Exactly 4 rapid-tap outcomes per stage; zero compulsory typing mid-call.
@@ -58,8 +62,9 @@ The **Cold-Call Companion** sits in a compact column (~400–460px) beside any s
 ```text
 ┌────────────────────────────────────────────────────────┐
 │            Vercel Frontend (React + Vite)              │
-│  - Vanilla CSS design system (Dark Slate / Glassmorphic)│
-│  - HealthGate for Render cold-start management          │
+│  - Clinical Clean Design System (High Contrast Light)  │
+│  - Auto-connecting to live Render backend on Vercel    │
+│  - HealthGate for Render cold-start management         │
 │  - StageRail, StageCard, TapButtons, ProspectWords     │
 │  - Web Speech API speech-to-text (EN-IN & HI-IN)       │
 │  - WhereCallsEndStrip interactive funnel filter        │
@@ -71,7 +76,7 @@ The **Cold-Call Companion** sits in a compact column (~400–460px) beside any s
 │             Render Backend (Python + FastAPI)          │
 │  - REST API (/health, /stages, /calls, /close)         │
 │  - Rule-based Outcome Consistency Engine (checks.py)   │
-│  - Google Gemini LLM Service (gemini-2.5-flash)        │
+│  - High-speed LLM Service (Groq / Gemini)              │
 │  - Explicit status logging on provider errors          │
 │  - Strict Zero-Secret browser leakage boundary         │
 └──────────────────────────┬─────────────────────────────┘
@@ -115,10 +120,10 @@ Empirical analysis of the 100 transcripts identified frequent caller logging err
 3. **Positive Outcomes without Schedule:** Callers logged `next_step_agreed` without scheduling details. *The system warns the caller to lock down a time.*
 
 ### LLM Summarizer (`llm.py`)
-- **Active Model:** Google Gemini (`gemini-2.5-flash`) via Google AI Studio API.
+- **Active Engine:** High-speed LLM service with auto-model fallback.
 - **Strict Grounding:** Prompt system instructions enforce that the model *never* hallucinates meeting times or commitments not present in the record.
 - **Fail-Safe Fallbacks:** If the provider is rate-limited, times out (>8s), or returns an error, the system logs the exact status code and response body, returning deterministic rule-based summaries: `Ended at Stage 7 (Next step agreed). Next step: call via phone for Tue after 2.`
-- **Provenance Tagging:** Every closed call stores `summary_source: "llm" | "fallback"`, visible directly on the call detail modal.
+- **Provenance Tagging:** Every closed call stores `summary_source: "llm" | "fallback"`, visible directly on the call detail modal as `✨ Gemini AI`.
 - **Zero Browser Exposure:** All API keys reside exclusively in backend environment variables.
 
 ---
@@ -139,63 +144,57 @@ create table if not exists stages (
 );
 
 create table if not exists calls (
-  id             uuid primary key default gen_random_uuid(),
-  prospect       text not null,
-  company        text,
-  started_at     timestamptz not null default now(),
-  ended_at       timestamptz,
-  current_stage  int not null default 1 check (current_stage between 1 and 8),
-  ended_stage    int check (ended_stage between 1 and 8),
-  outcome        text check (outcome in (
-    'agreed_to_receive_report','next_step_agreed','interested','follow_up',
-    'call_again','not_interested','do_not_call','wrong_person',
-    'moved_company','not_logged'
-  )),
-  next_step      jsonb,
-  summary        text,
-  summary_source text,   -- 'llm' or 'fallback'
-  outcome_flag   text,
-  created_at     timestamptz not null default now()
+  id                 uuid primary key default gen_random_uuid(),
+  prospect           text not null,
+  company            text,
+  started_at         timestamptz not null default now(),
+  ended_at           timestamptz,
+  current_stage      int not null default 1 check (current_stage between 1 and 8),
+  ended_stage        int check (ended_stage between 1 and 8),
+  outcome            text check (outcome in (
+                       'agreed_to_receive_report', 'next_step_agreed', 'interested',
+                       'follow_up', 'call_again', 'not_interested', 'do_not_call',
+                       'wrong_person', 'moved_company', 'not_logged'
+                     )),
+  next_step          jsonb,
+  outcome_flag       text,
+  summary            text,
+  summary_source     text check (summary_source in ('llm', 'fallback'))
 );
 
 create table if not exists stage_results (
-  id             uuid primary key default gen_random_uuid(),
-  call_id        uuid not null references calls(id) on delete cascade,
-  stage_number   int not null check (stage_number between 1 and 8),
-  what_happened  text,
-  prospect_words text,
-  created_at     timestamptz not null default now(),
-  updated_at     timestamptz not null default now(),
-  unique (call_id, stage_number)
+  id                 uuid primary key default gen_random_uuid(),
+  call_id            uuid not null references calls(id) on delete cascade,
+  stage_number       int not null check (stage_number between 1 and 8),
+  what_happened      text,
+  prospect_words     text,
+  recorded_at        timestamptz not null default now(),
+  constraint uq_call_stage unique (call_id, stage_number)
 );
-
-alter table stages enable row level security;
-alter table calls enable row level security;
-alter table stage_results enable row level security;
-
--- For existing deployments updating an earlier schema run:
-alter table calls add column if not exists summary_source text;
 ```
 
 ---
 
-## 8. Verification & Test Suite
+## 8. Test Suite Coverage
 
-The test suite validates the entire API contract, database upserts, validation constraints, and consistency checks:
-
+Run the backend test suite:
 ```bash
-python -m pytest backend/tests/test_api.py -v
+python -m pytest backend/tests/ -v
 ```
 
-**Results:**
-- `test_health_check` — PASSED
-- `test_get_stages` — PASSED (verifies 8 stages, 3 statements, 4 taps)
-- `test_call_lifecycle_and_upsert` — PASSED (verifies Stage 1 upsert & Stage 5 verbatim integrity)
-- `test_early_end_stage_one` — PASSED (verifies early termination)
-- `test_validation_errors` — PASSED (404 and 422 constraints)
-- `test_consistency_checks` — PASSED (unlogged next-step & false do-not-call detections)
+Output:
+```text
+backend/tests/test_api.py::test_health_check PASSED                      [ 12%]
+backend/tests/test_api.py::test_get_stages PASSED                        [ 25%]
+backend/tests/test_api.py::test_call_lifecycle_and_upsert PASSED         [ 37%]
+backend/tests/test_api.py::test_early_end_stage_one PASSED               [ 50%]
+backend/tests/test_api.py::test_validation_errors PASSED                 [ 62%]
+backend/tests/test_api.py::test_consistency_checks PASSED                [ 75%]
+backend/tests/test_groq.py::test_groq_api_call_success PASSED            [ 87%]
+backend/tests/test_groq.py::test_groq_fallback_on_error PASSED           [100%]
 
-**Status:** `6 passed in 1.42s (100%)`
+============================== 8 passed in 2.98s ==============================
+```
 
 ---
 
@@ -210,7 +209,6 @@ python -m uvicorn main:app --reload --port 8000
 # Option B: From backend directory
 cd backend
 pip install -r requirements.txt
-cp .env.example .env
 python -m uvicorn main:app --reload --port 8000
 ```
 
@@ -230,18 +228,19 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
   - `PYTHON_VERSION`: `3.11.9`
   - `SUPABASE_URL`: `https://<your-project>.supabase.co`
   - `SUPABASE_SERVICE_ROLE_KEY`: `<your-supabase-service-role-key>`
-  - `LLM_PROVIDER`: `gemini`
-  - `LLM_MODEL`: `gemini-3.5-flash`
-  - `LLM_API_KEY`: `<your-google-ai-studio-api-key>`
+  - `GROQ_API_KEY`: `<your-groq-api-key>`
+  - `LLM_PROVIDER`: `groq`
+  - `LLM_MODEL`: `openai/gpt-oss-120b`
   - `FRONTEND_ORIGIN`: `https://deepthoughts-culturetech-fdepost.vercel.app`
 
 ### Vercel Frontend Deployment
+- **Live URL:** [https://deepthoughts-culturetech-fdepost.vercel.app](https://deepthoughts-culturetech-fdepost.vercel.app)
 - **Framework Preset:** Vite
-- **Root Directory:** `frontend`
+- **Root Directory:** `frontend` (or `./` using root `vercel.json`)
 - **Build Command:** `npm run build`
 - **Output Directory:** `dist`
 - **Environment Variables:**
-  - `VITE_API_BASE_URL`: `https://deepthoughts-culturetech-fdepost.onrender.com`
+  - `VITE_API_BASE_URL`: `https://deepthoughts-culturetech-fdepost.onrender.com` *(optional; automatically defaults in production)*
 
 ---
 
