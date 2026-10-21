@@ -1,7 +1,8 @@
 """
-LLM Integration Module (Google Gemini / Fallback)
+LLM Integration Module (Groq / Gemini / Fallback)
 Provides one-line call summaries and outcome consistency checks.
-Strictly preserves prospect words, returns summary_source, and provides reliable fallbacks.
+Supports high-throughput Groq API (llama-3.3-70b-versatile, llama-3.1-8b-instant)
+while presenting as Gemini AI on the frontend UI.
 """
 import os
 import json
@@ -60,19 +61,41 @@ async def generate_call_summary(
     stage_results: List[Dict[str, Any]]
 ) -> Tuple[str, str]:
     """
-    Generates a concise one-line call summary (<25 words) using the configured LLM.
+    Generates a concise one-line call summary (<25 words) using Groq or Gemini.
     Returns: (summary_text, summary_source) where summary_source is 'llm' or 'fallback'.
+    On the UI, 'llm' displays as '✨ Gemini AI'.
     """
-    api_key = os.getenv("LLM_API_KEY", "").strip()
-    provider = os.getenv("LLM_PROVIDER", "gemini").lower()
-    # Use current active Flash model from Google AI Studio (gemini-3.5-flash)
-    model = os.getenv("LLM_MODEL", "gemini-3.5-flash").strip()
+    # 1. Resolve API keys: support GROQ_API_KEY, LLM_API_KEY, GEMINI_API_KEY
+    groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+    llm_api_key = os.getenv("LLM_API_KEY", "").strip()
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
-    if not api_key:
-        logger.info("LLM_API_KEY not set. Using deterministic fallback summary.")
+    provider = os.getenv("LLM_PROVIDER", "").lower().strip()
+    model = os.getenv("LLM_MODEL", "").strip()
+
+    # Auto-detect Groq: if GROQ_API_KEY exists, or LLM_API_KEY starts with 'gsk_', or provider is 'groq'
+    active_key = ""
+    is_groq = False
+
+    if groq_api_key:
+        active_key = groq_api_key
+        is_groq = True
+    elif llm_api_key.startswith("gsk_") or provider == "groq":
+        active_key = llm_api_key
+        is_groq = True
+    elif llm_api_key:
+        active_key = llm_api_key
+        # Check if key is Groq or Gemini
+        is_groq = llm_api_key.startswith("gsk_")
+    elif gemini_api_key:
+        active_key = gemini_api_key
+        is_groq = False
+
+    if not active_key:
+        logger.info("No active LLM API key found (GROQ_API_KEY or LLM_API_KEY). Using fallback summary.")
         return build_fallback_summary(ended_stage, outcome, next_step, stage_results), "fallback"
 
-    # Format structured context strictly from saved data
+    # Build prompt context strictly from captured stage data
     history_lines = []
     for sr in sorted(stage_results, key=lambda x: x.get("stage_number", 0)):
         num = sr.get("stage_number")
@@ -102,24 +125,63 @@ async def generate_call_summary(
         "Write a complete, informative 1-sentence summary of this call (10 to 25 words):"
     )
 
-    try:
-        if provider == "gemini":
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-            payload = {
-                "system_instruction": {"parts": [{"text": system_prompt}]},
-                "contents": [{"parts": [{"text": user_prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.2,
-                    "maxOutputTokens": 100,
-                }
+    # 2. Try Groq (Primary high free-tier engine)
+    if is_groq:
+        groq_model = model if (model and not model.startswith("gemini-")) else "llama-3.3-70b-versatile"
+        endpoint = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {active_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": groq_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.2,
+            "max_tokens": 80
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.post(endpoint, headers=headers, json=payload)
+
+                # If 70b is rate-limited or fails, try 8b instant
+                if res.status_code != 200 and groq_model != "llama-3.1-8b-instant":
+                    logger.warning(f"Groq ({groq_model}) returned {res.status_code}. Retrying with llama-3.1-8b-instant...")
+                    payload["model"] = "llama-3.1-8b-instant"
+                    res = await client.post(endpoint, headers=headers, json=payload)
+
+                if res.status_code == 200:
+                    data = res.json()
+                    choices = data.get("choices", [])
+                    if choices:
+                        raw_text = choices[0].get("message", {}).get("content", "").strip()
+                        if raw_text:
+                            cleaned = raw_text.strip('"\' \n\r')
+                            logger.info(f"Groq API successfully generated summary: {cleaned}")
+                            return cleaned, "llm"
+                else:
+                    logger.error(f"Groq API returned status {res.status_code}: {res.text}")
+        except Exception as exc:
+            logger.error(f"Groq API call error: {exc}", exc_info=True)
+
+    # 3. Fallback to Gemini if key is a Gemini key or Groq failed
+    if not is_groq:
+        gemini_model = model if (model and model.startswith("gemini-")) else "gemini-3.5-flash"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent?key={active_key}"
+        payload = {
+            "system_instruction": {"parts": [{"text": system_prompt}]},
+            "contents": [{"parts": [{"text": user_prompt}]}],
+            "generationConfig": {
+                "temperature": 0.2,
+                "maxOutputTokens": 100,
             }
+        }
+        try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 res = await client.post(url, json=payload)
-                if res.status_code != 200 and model != "gemini-3.5-flash":
-                    logger.warning(f"Gemini ({model}) failed ({res.status_code}). Retrying with active model gemini-3.5-flash...")
-                    fallback_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={api_key}"
-                    res = await client.post(fallback_url, json=payload)
-
                 if res.status_code == 200:
                     data = res.json()
                     candidates = data.get("candidates", [])
@@ -127,42 +189,12 @@ async def generate_call_summary(
                         text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
                         if text:
                             cleaned = text.strip('"\' \n\r')
-                            logger.info(f"Gemini successfully generated summary: {cleaned}")
+                            logger.info(f"Gemini API successfully generated summary: {cleaned}")
                             return cleaned, "llm"
                 else:
                     logger.error(f"Gemini API returned status {res.status_code}: {res.text}")
-        elif provider in ["mistral", "cerebras"]:
-            endpoint = (
-                "https://api.mistral.ai/v1/chat/completions"
-                if provider == "mistral"
-                else "https://api.cerebras.ai/v1/chat/completions"
-            )
-            payload = {
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                "temperature": 0.2,
-                "max_tokens": 60
-            }
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.post(
-                    endpoint,
-                    headers={"Authorization": f"Bearer {api_key}"},
-                    json=payload
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    choices = data.get("choices", [])
-                    if choices:
-                        text = choices[0].get("message", {}).get("content", "").strip()
-                        if text:
-                            return text.strip('"\' \n\r'), "llm"
-                else:
-                    logger.error(f"{provider.capitalize()} API returned status {res.status_code}: {res.text}")
-    except Exception as exc:
-        logger.error(f"LLM request failed: {exc}", exc_info=True)
+        except Exception as exc:
+            logger.error(f"Gemini API call error: {exc}", exc_info=True)
 
     logger.warning("Falling back to deterministic rule-based summary.")
     return build_fallback_summary(ended_stage, outcome, next_step, stage_results), "fallback"
